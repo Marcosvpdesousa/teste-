@@ -1,25 +1,254 @@
-# CakePHP 3
+\\ nome: Marcos vinicius pereira de sousa
 
-/vendor/*
-/config/app.php
+<?php
+class Contato {
+  const USUARIO = "root";
+  const SENHA = "SENHA";
+  public function conectar() {
+    $con = new PDO("mysql:host=localhost;dbname=agenda", self::USUARIO,self::SENHA);
+    $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    return $con;
+  }
+  public function novo($nome,$email,$telefone,$responsavel){
+    $con = $this->conectar();
+    $stm = $con->prepare("insert into contatos (nome,email,telefone,responsavel) values (?,?,?,?)");
+    $stm->bindParam(1,$nome);
+    $stm->bindParam(2,$email);
+    $stm->bindParam(3,$telefone);
+    $stm->bindParam(4,$responsavel);
+    $stm->execute();
+    
+  }
+}
+?>
+<!doctype html>
+<html lang="pt-br">
 
-/tmp/cache/models/*
-!/tmp/cache/models/empty
-/tmp/cache/persistent/*
-!/tmp/cache/persistent/empty
-/tmp/cache/views/*
-!/tmp/cache/views/empty
-/tmp/sessions/*
-!/tmp/sessions/empty
-/tmp/tests/*
-!/tmp/tests/empty
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
-/logs/*
-!/logs/empty
+<title>Agenda Web</title>
 
-# CakePHP 2
+</head>
+<body>
+<form action="login.php" method="post" id="loginform" class="form-horizontal" role="form">
+    <div class="container">    
+        <div id="loginbox" style="margin-top:50px;" class="mainbox col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">                    
+            <div class="panel panel-info" >
+                    <div class="panel-heading">
+                        <div class="panel-title">Acesso</div>
+                        <div style="float:right; font-size: 80%; position: relative; top:-10px"><a href="#">Esqueceu sua senha?</a></div>
+                    </div>     
 
-/app/tmp/*
-/app/Config/core.php
-/app/Config/database.php
-/vendors/*
+                    <div style="padding-top:30px" class="panel-body" >
+
+                        <div style="display:none" id="login-alert" class="alert alert-danger col-sm-12"></div>
+                            
+                        
+                                    
+                            <div style="margin-bottom: 25px" class="input-group">
+                                        <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+                                        <input id="login-username" type="text" class="form-control" name="usuario" value="" placeholder="nome de usuário" requerid>                                        
+                                    </div>
+                                
+                            <div style="margin-bottom: 25px" class="input-group">
+                                        <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+                                        <input id="login-password" type="password" class="form-control" name="senha" placeholder="senha" required>
+                                    </div>
+                                    
+
+                                
+                            <div class="input-group">
+
+                                <div style="margin-top:10px" class="form-group">
+                                    <!-- Button -->
+
+                                    <div class="col-sm-12 controls">
+                                      <button type="submit" class="btn btn-success">Login  </button>
+
+                                    </div>
+                                </div>
+
+
+                            </form>     
+
+
+
+                        </div>                     
+                    </div>  
+        </div>
+        
+               
+               
+                
+         </div> 
+    </div>
+</body>
+</html>    
+<?php
+session_start();
+include_once "Usuario.class.php";
+$usuario = new Usuario();
+try {
+  if($usuario->confere($_POST['usuario'],$_POST['senha'])) {
+    $_SESSION['autenticado'] = true;
+    $_SESSION['usuario'] = $_POST['usuario'];
+    header('location: principal.php');
+  } else {
+    $_SESSION['autenticado'] = false;
+    include_once "index.php";
+    exit("<div class='alert alert-danger col-sm-12'>Usuário ou senha incorretos. Verifique</div>");
+  }
+} catch(PDOException $p){
+  echo "Ocorreu um erro inesperado: ". $p->getMessage();
+}
+
+?>
+<?php
+session_start();
+if (!$_SESSION['autenticado']){
+  include_once "index.php";
+  exit("<div class='alert alert-danger col-sm-12'>Para acessar o sistema você deve efetuar login</div>");
+}
+?>
+<form class="form-horizontal" action="principal.php?q=1b" method="post">
+<fieldset>
+
+<!-- Form Name -->
+<legend>Novo Contato</legend>
+
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="nome">Nome</label>  
+  <div class="col-md-5">
+  <input id="nome" name="nome" placeholder="Nome completo" class="form-control input-md" required type="text">
+    
+  </div>
+</div>
+
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="telefone">Telefone</label>  
+  <div class="col-md-4">
+  <input id="telefone" name="telefone" placeholder="(99) 99999-9999" class="form-control input-md" required type="text">
+    
+  </div>
+</div>
+
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="email">Email</label>  
+  <div class="col-md-4">
+  <input id="email" name="email" placeholder="email" class="form-control input-md" required type="text">
+    
+  </div>
+</div>
+
+<!-- Button (Double) -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="salvar"></label>
+  <div class="col-md-8">
+    <button id="salvar" name="salvar" class="btn btn-success" type="submit"  >&nbsp;Salvar&nbsp;</button>
+    <a href="principal.php" id="cancelar" name="cancelar" class="btn btn-danger">Cancelar</a>
+  </div>
+</div>
+
+</fieldset>
+</form>
+<?php
+session_start();
+?>
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+<title>Agenda Web</title>
+
+</head>
+
+<body>
+<?php
+
+if (!$_SESSION['autenticado']){
+  include_once "index.php";
+  exit("<div class='alert alert-danger col-sm-12'>Para acessar o sistema você deve efetuar login</div>");
+}
+?>
+<div class="container">    
+        <div id="loginbox" style="margin-top:50px;" class="mainbox">                    
+            <div class="panel panel-info" >
+                    <div class="panel-heading">
+                        <div class="panel-title">Agenda Web - Bem vindo <b><?=$_SESSION['usuario'];?></b></div>
+                        
+                        <div style="float:right; font-size: 80%; position: relative; top:-10px"><a href="logout.php"> Sair </a></div>
+                    </div>     
+            </div>
+            
+              <!-- Menu dropdown com bootstrap -->
+              <div class="dropdown">
+              <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Ações
+              <span class="caret"></span></button>
+              <ul class="dropdown-menu">
+                    <li><a href="?q=1">Cadastrar Contato</a></li>
+                    <li><a href="#">Visualizar Contatos</a></li>
+                    <li><a href="#">Localizar</a></li>
+              </ul>
+              </div>
+
+<?php
+  if (isset($_GET['q'])){
+    switch($_GET['q']) {
+      case '1':
+        include_once 'novoContato.inc.php';
+        break;
+      case '1b':
+        include_once 'Contato.class.php';
+        $contato = new Contato();
+        try {
+          $contato->novo($_POST['nome'],$_POST['email'],$_POST['telefone'],$_SESSION['usuario']);
+          echo "<br /><br /><div class='alert alert-success col-sm-12'>Contato salvo com sucesso.</div>";
+        } catch(PDOException $p) {
+          echo "Ocorreu um erro inesperado: ". $p->getMessage();
+        }  
+    }
+  } else {
+    ?>
+         <div style="font-size:60px;color:white;text-shadow: 2px -5px 3px skyblue;margin:0 auto;width:50%">Agenda WEB 1.0</div> 
+    <?php
+  }      
+?>
+            
+            
+            
+        </div>
+</div>
+</body>
+</html>
+<?php
+class Usuario {
+  const USUARIO = "root";
+  const SENHA = "SENHA";
+  public function conecta() {
+    $con = new PDO("mysql:host=localhost;dbname=agenda", self::USUARIO,self::SENHA);
+	  $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    return $con;
+  }
+  public function confere($us,$se) {
+    $con = $this->conecta();
+    $stm = $con->prepare("select * from usuarios where usuario=? and senha=password(?)");
+    $stm->bindParam(1,$us);
+    $stm->bindParam(2,$se);
+    $stm->execute();
+    $dados = $stm->fetchAll(PDO::FETCH_ASSOC);
+    return count($dados);
+     
+  }
+}
+?>
